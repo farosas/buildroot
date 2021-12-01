@@ -1,0 +1,27 @@
+name: images for QEMU
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        machine: [ppc_mac99, ppc64le_pseries]
+    steps:
+    - uses: actions/checkout@v2
+    - run: make qemu_${{matrix.machine}}_defconfig
+    - run: make
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "qemu_${{matrix.machine}}_latest"
+          prerelease: true
+          title: "latest ${{matrix.machine}}"
+          files: |
+              output/images/rootfs.ext2
+              output/images/start-qemu.sh
+              output/images/vmlinux
